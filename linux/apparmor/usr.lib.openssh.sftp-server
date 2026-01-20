@@ -1,0 +1,25 @@
+#include <tunables/global>
+
+/usr/lib/openssh/sftp-server {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  /usr/lib/openssh/sftp-server mr,
+  /etc/ssh/sshd_config r,
+  /etc/ssh/sshd_config.d/** r,
+
+  /srv/ftp/ r,
+  /srv/ftp/cnc-files/ r,
+  /srv/ftp/cnc-files/** rw,
+
+  /dev/null rw,
+  /dev/urandom r,
+  /dev/log w,
+
+  /lib/** r,
+  /usr/lib/** r,
+  /lib64/** r,
+  /usr/lib64/** r,
+
+  network inet stream,
+}

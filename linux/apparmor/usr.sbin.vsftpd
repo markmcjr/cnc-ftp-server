@@ -1,0 +1,31 @@
+#include <tunables/global>
+
+/usr/sbin/vsftpd {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  /usr/sbin/vsftpd mr,
+  /etc/vsftpd.conf r,
+  /etc/vsftpd.user_list r,
+  /etc/ftpusers r,
+  /etc/pam.d/vsftpd r,
+
+  /srv/ftp/ r,
+  /srv/ftp/cnc-files/ r,
+  /srv/ftp/cnc-files/** r,
+
+  /var/log/vsftpd.log rw,
+  /var/log/ w,
+
+  /dev/null rw,
+  /dev/urandom r,
+  /dev/log w,
+
+  /lib/** r,
+  /usr/lib/** r,
+  /lib64/** r,
+  /usr/lib64/** r,
+
+  network inet stream,
+  capability net_bind_service,
+}
