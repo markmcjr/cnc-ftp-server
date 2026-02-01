@@ -175,6 +175,7 @@ bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh /opt/cnc-ftp-server/linux/sc
 - Set `INSTALL_PACKAGES=no` in the env file if you want to install packages manually.
 
 ### Validation
+- Review the setup log: `cat /var/log/cnc-ftp-setup.log`
 - Check `systemctl status vsftpd` and `systemctl status ssh`.
 - Confirm passive ports and user allowlist match `linux/vsftpd/vsftpd.conf` and `linux/vsftpd/vsftpd.user_list`.
 

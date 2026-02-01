@@ -27,3 +27,11 @@ hostkey.txt
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Claude Code context files
+CLAUDE.md
+AGENTS.md
+agents.md
+
+# IDE files
+*.code-workspace
