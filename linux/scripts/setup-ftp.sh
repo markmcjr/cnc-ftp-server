@@ -110,6 +110,7 @@ sed -i "s/^Match User .*/Match User $PUBLISHER_USER/" "$SSHD_SNIPPET_PATH"
 
 cat > /etc/ssh/sshd_config.d/10-allow-users.conf <<EOF
 AllowUsers $SSH_ALLOW_USERS
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u
 EOF
 
 install -d -m 0755 "$AUTHORIZED_KEYS_DIR"
