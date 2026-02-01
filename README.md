@@ -89,28 +89,53 @@ git clone https://github.com/<org>/cnc-ftp-server.git /opt/cnc-ftp-server
 exit
 ```
 
-### Pre-Setup: Prepare SSH Keys
+### Pre-Setup: Create Admin User and Prepare SSH Keys
 
-> **Important**: The setup script configures SSH `AllowUsers` which restricts SSH access to specific users. Prepare your SSH keys BEFORE running the setup script to avoid being locked out.
+> **Important**: The setup script configures SSH `AllowUsers` which restricts SSH access to specific users. Create your admin user and prepare SSH keys BEFORE running the setup script to avoid being locked out.
 
-**On Windows (publisher workstation):**
-1. Create a folder for the sync bundle: `C:\CNC\Sync\keys`
-2. Generate a key: `ssh-keygen -t ed25519 -f C:\CNC\Sync\keys\publisher_ed25519`
-3. Copy `C:\CNC\Sync\keys\publisher_ed25519.pub` to the Debian VM (via scp, USB, or paste the contents)
-
-**On the Debian VM (as root):**
+**Step 1: Create the ftpadmin user on the Debian VM:**
 ```bash
 su -
-install -d -m 0755 /etc/ssh/authorized_keys
-# If you copied the .pub file:
-install -m 0644 /path/to/publisher_ed25519.pub /etc/ssh/authorized_keys/publisher
-# Or paste the key directly:
-echo "ssh-ed25519 AAAA... user@host" > /etc/ssh/authorized_keys/publisher
-chmod 0644 /etc/ssh/authorized_keys/publisher
+useradd -m -s /bin/bash ftpadmin
+passwd ftpadmin
 exit
 ```
 
-**Optional**: If you have a `helpdesk` user or other admin accounts that need SSH access, add their keys now as well.
+**Step 2: Generate SSH keys on Windows (publisher workstation):**
+```powershell
+# Create folders
+mkdir C:\CNC\Sync\keys
+
+# Generate publisher key (for automated sync)
+ssh-keygen -t ed25519 -f C:\CNC\Sync\keys\publisher_ed25519
+
+# Generate ftpadmin key (for admin access)
+ssh-keygen -t ed25519 -f C:\CNC\Sync\keys\ftpadmin_ed25519
+```
+
+**Step 3: Copy public keys to the Debian VM:**
+```powershell
+# Copy keys via scp (if SSH server was installed during Debian setup)
+scp C:\CNC\Sync\keys\publisher_ed25519.pub ftpadmin@<vm-ip>:~/
+scp C:\CNC\Sync\keys\ftpadmin_ed25519.pub ftpadmin@<vm-ip>:~/
+```
+If SSH is not yet available, copy the `.pub` files via USB or paste their contents manually.
+
+**Step 4: Install the keys on the Debian VM (as root):**
+```bash
+su -
+install -d -m 0755 /etc/ssh/authorized_keys
+
+# Install publisher key
+install -m 0644 /home/ftpadmin/publisher_ed25519.pub /etc/ssh/authorized_keys/publisher
+
+# Install ftpadmin key
+install -m 0644 /home/ftpadmin/ftpadmin_ed25519.pub /etc/ssh/authorized_keys/ftpadmin
+
+# Clean up
+rm /home/ftpadmin/*.pub
+exit
+```
 
 ### Setup Steps
 1. Ensure the repo is at `/opt/cnc-ftp-server/` using one of the methods above.
