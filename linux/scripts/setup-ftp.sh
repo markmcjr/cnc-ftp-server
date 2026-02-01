@@ -103,6 +103,10 @@ sed \
   -e "s/^pasv_max_port=.*/pasv_max_port=$PASV_MAX_PORT/" \
   "$vsftpd_template" > "$VSFTPD_CONF_PATH"
 
+# Create vsftpd log files
+touch /var/log/xferlog /var/log/vsftpd.log
+chmod 600 /var/log/xferlog /var/log/vsftpd.log
+
 cp "$repo_root/linux/vsftpd/vsftpd.user_list" "$VSFTPD_USER_LIST_PATH"
 
 cp "$repo_root/linux/ssh/sshd_config.publisher.conf" "$SSHD_SNIPPET_PATH"
