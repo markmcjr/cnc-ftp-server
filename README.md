@@ -137,6 +137,13 @@ rm /home/ftpadmin/*.pub
 exit
 ```
 
+**Step 5: Test SSH connection from Windows before proceeding:**
+```powershell
+# Test ftpadmin access (should connect without password prompt)
+ssh -i C:\CNC\Sync\keys\ftpadmin_ed25519 ftpadmin@<vm-ip> "echo 'ftpadmin key works'"
+```
+> **Important**: This must succeed before running the setup script. If it fails, verify the key was installed correctly and has proper permissions (0644). The `publisher` user will be created by the setup script, so test that connection after setup completes.
+
 ### Setup Steps
 1. Ensure the repo is at `/opt/cnc-ftp-server/` using one of the methods above.
 2. **Ensure SSH keys are in place** (see Pre-Setup above) — the setup script will restrict SSH access.
