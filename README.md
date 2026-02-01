@@ -15,7 +15,40 @@ This repository captures the design and configuration artifacts for an internal 
 - The Windows script requires `sftp.exe` in PATH and a populated `C:\CNC\ssh_known_hosts`.
 
 ## Deployment
-1. Copy the repo to the Debian 12 VM.
+
+### VM Requirements
+- **Minimum specs**: 1 vCPU, 1 GB RAM, 20 GB disk (adjust disk size based on expected CNC file storage)
+- **OS**: Debian 12 (Bookworm) minimal install
+- **Example VM name**: `cnc-ftp-01` or `ftp-cnc-prod`
+- **Network**: Static IP recommended; note the IP for firewall rules and Windows client configuration
+
+### Debian Installation Package Selection
+During Debian installation, at the "Software selection" screen:
+- **Deselect** "Debian desktop environment" and any desktop (GNOME, KDE, etc.)
+- **Keep selected**: "standard system utilities"
+- **Optional but recommended**: Select "SSH server" during install for easier initial setup (allows remote copy of repo files)
+
+> **Note**: If you skip the SSH server during install, you must transfer the repository files using alternative methods (see below).
+
+### Getting the Repository onto the VM
+Choose one of the following methods:
+
+**Option A: SSH server installed during Debian setup (recommended)**
+- From your workstation: `scp -r cnc-ftp-server/ user@<vm-ip>:~/`
+- Or clone directly on the VM: `git clone <repo-url>`
+
+**Option B: No SSH server yet (manual transfer)**
+- **USB drive**: Copy the repo to a USB drive, mount it on the VM (`mount /dev/sdb1 /mnt`), and copy files
+- **Shared folder (VMware/VirtualBox)**: Configure a shared folder in your hypervisor and copy from `/mnt/hgfs/` or similar
+- **Direct clone**: If the VM has network access, install git first (`sudo apt update && sudo apt install -y git`) then clone the repo
+
+**Option C: GitHub without SSH**
+- Log into the VM console directly
+- Install git: `sudo apt update && sudo apt install -y git`
+- Clone via HTTPS: `git clone https://github.com/<org>/cnc-ftp-server.git`
+
+### Setup Steps
+1. Copy the repo to the Debian 12 VM using one of the methods above.
 2. Review `linux/scripts/setup.env.example` and save as `linux/scripts/setup.env` if you want non-interactive setup.
 3. Run `sudo bash linux/scripts/setup-ftp.sh` and answer the prompts.
 4. Apply the firewall policy described in `firewall/rules.md` on the upstream firewall.
