@@ -28,5 +28,10 @@
   /usr/lib64/** r,
 
   network inet stream,
+
   capability net_bind_service,
+  capability setgid,
+  capability setuid,
+  capability sys_chroot,
+  capability chown,
 }
