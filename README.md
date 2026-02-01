@@ -89,6 +89,13 @@ git clone https://github.com/<org>/cnc-ftp-server.git /opt/cnc-ftp-server
 exit
 ```
 
+**After copying/cloning**: Set ownership so ftpadmin can manage the repo (e.g., `git pull`):
+```bash
+su -
+chown -R ftpadmin:ftpadmin /opt/cnc-ftp-server
+exit
+```
+
 ### Pre-Setup: Create Admin User and Prepare SSH Keys
 
 > **Important**: The setup script configures SSH `AllowUsers` which restricts SSH access to specific users. Create your admin user and prepare SSH keys BEFORE running the setup script to avoid being locked out.
