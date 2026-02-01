@@ -3,20 +3,30 @@
 /usr/sbin/vsftpd {
   #include <abstractions/base>
   #include <abstractions/nameservice>
+  #include <abstractions/authentication>
 
   /usr/sbin/vsftpd mr,
   /etc/vsftpd.conf r,
   /etc/vsftpd.user_list r,
   /etc/ftpusers r,
-  /etc/pam.d/vsftpd r,
+  /etc/pam.d/* r,
+  /etc/login.defs r,
+  /etc/shells r,
+
+  # PAM password checking helper
+  /usr/sbin/unix_chkpwd mrix,
 
   /srv/ftp/ r,
   /srv/ftp/cnc-files/ r,
   /srv/ftp/cnc-files/** r,
 
-  /var/log/vsftpd.log rw,
-  /var/log/xferlog rw,
+  /var/log/vsftpd.log rwk,
+  /var/log/xferlog rwk,
   /var/log/ w,
+
+  # Login records
+  /run/utmp r,
+  /var/run/utmp r,
 
   /dev/null rw,
   /dev/urandom r,
@@ -34,4 +44,5 @@
   capability setuid,
   capability sys_chroot,
   capability chown,
+  capability dac_override,
 }

@@ -3,6 +3,7 @@ param(
     [string]$SftpHost = "ftp-vm.local",
     [string]$SftpUser = "publisher",
     [string]$RemotePath = "/cnc-files",
+    [Alias("SshKeyPath")]
     [string]$KeyPath,
     [string]$HostKey,
     [string]$HostKeyFile,

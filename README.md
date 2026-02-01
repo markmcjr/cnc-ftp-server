@@ -192,36 +192,84 @@ ftp <ftp-vm-ip>
 scp -i C:\CNC\Sync\keys\publisher_ed25519 C:\CNC\Jobs\test.txt publisher@<ftp-vm-ip>:/cnc-files/
 ```
 
-## Windows Sync (WinSCP)
-1. Download WinSCP portable from `https://winscp.net/download/WinSCP-6.5.5-Portable.zip/download`.
-2. Use either:
-   - **Installer**: ensure `WinSCP.com` and `WinSCP.exe` are available and note the path.
-   - **Portable**: extract both `WinSCP.com` and `WinSCP.exe` into the same folder as `windows/SyncCncToFtp.ps1`.
-3. Determine the host key by running (first-time): `"C:\Path\To\WinSCP.com" /command "open sftp://publisher@<ftp-vm-ip>/" "exit"` and copy the reported `ssh-ed25519` host key string.
-4. Place `SyncCncToFtp.ps1`, `SyncCncToFtp.cmd`, `WinSCP.com`, and `WinSCP.exe` into `C:\CNC\Sync`.
-5. Create the default source directory: `C:\CNC\Jobs` (or override `-SourcePath` when running).
-6. Convert the SSH key to PPK for WinSCP:
-   - `C:\CNC\Sync\WinSCP.com /keygen C:\CNC\Sync\keys\publisher_ed25519 /output=C:\CNC\Sync\keys\publisher_ed25519.ppk`
-7. Run the sync script from the same folder you want logs to land in:
-   - `powershell.exe -File .\SyncCncToFtp.ps1 -SftpHost <ftp-vm-ip> -HostKey "ssh-ed25519 256 ..."`
-   - Optional: save the host key to `C:\CNC\Sync\hostkey.txt` and omit `-HostKey`.
-   - Optional override: `-WinScpPath "C:\Program Files (x86)\WinSCP\WinSCP.com"`
-8. Logs are written to `SyncCncToFtp.log` in the same directory as the script.
+## Windows Sync Setup
 
-### Schedule on Windows
-1. Open Task Scheduler → Create Task.
-2. **General**: run whether user is logged on or not; run with highest privileges.
-3. **Triggers**: create a schedule (e.g., every 5 minutes).
-4. **Actions**:
-   - Program/script: `powershell.exe`
-   - Arguments: `-NoProfile -ExecutionPolicy Bypass -File "C:\CNC\Sync\SyncCncToFtp.ps1" -SftpHost <ftp-vm-ip> -HostKey "ssh-ed25519 256 ..."`
-   - Optional: save the host key to `C:\CNC\Sync\hostkey.txt` and omit `-HostKey`.
-   - Start in: `C:\CNC\Sync`
-5. **Conditions**: disable “Start the task only if the computer is on AC power” if needed.
-6. **Settings**: allow task to run on demand; stop if runs longer than expected.
-7. Optional: use `windows/SyncCncToFtp.cmd` as the action target instead of `powershell.exe`.
-8. Optional: import `windows/SyncCncToFtp.task.xml` and update the host/key values.
+### Prerequisites
+1. SSH keys generated and installed (see Pre-Setup above)
+2. FTP server running and accessible
+3. Server repository is up to date (`git pull` on the server if needed)
+
+### Quick Install (Recommended)
+
+**Step 1: Create the sync folder and download the installer:**
+```powershell
+# Create folder structure (this should already exist from previous steps)
+mkdir C:\CNC\Sync
+
+# Copy installer from server (requires ftpadmin SSH access)
+scp -i C:\CNC\Sync\keys\ftpadmin_ed25519 ftpadmin@<ftp-vm-ip>:/opt/cnc-ftp-server/windows/Install-CncSync.ps1 C:\CNC\Sync\
+```
+
+> **Note: SSH Key Permissions on Windows**
+> If you get "WARNING: UNPROTECTED PRIVATE KEY FILE!", fix permissions:
+> ```powershell
+> icacls C:\CNC\Sync\keys\ftpadmin_ed25519 /inheritance:r /grant:r "$($env:USERNAME):(R)"
+> icacls C:\CNC\Sync\keys\publisher_ed25519 /inheritance:r /grant:r "$($env:USERNAME):(R)"
+> ```
+
+> The installer will automatically download the other required files (`SyncCncToFtp.ps1`, etc.) from the server.
+
+**Step 2: Download WinSCP portable:**
+- Download from: `https://winscp.net/download/WinSCP-6.5.5-Portable.zip`
+- Extract `WinSCP.com` and `WinSCP.exe` to `C:\CNC\Sync\`
+
+**Step 3: Run the installer:**
+```powershell
+cd C:\CNC\Sync
+powershell -ExecutionPolicy Bypass -File .\Install-CncSync.ps1
+```
+
+The installer will:
+- Download required sync scripts from the server automatically
+- Prompt for server IP, sync folder, and schedule interval
+- Auto-detect or prompt for the SSH host key
+- Convert your SSH key to PPK format (required by WinSCP)
+- Create a Windows scheduled task for automated sync
+
+### Updating Settings
+
+Edit `C:\CNC\Sync\sync-config.ps1` and re-run the installer:
+```powershell
+cd C:\CNC\Sync
+powershell -ExecutionPolicy Bypass -File .\Install-CncSync.ps1 -ConfigOnly
+```
+
+### Removing the Scheduled Task
+```powershell
+cd C:\CNC\Sync
+powershell -ExecutionPolicy Bypass -File .\Install-CncSync.ps1 -Uninstall
+```
+
+### Manual Sync Test
+```powershell
+cd C:\CNC\Sync
+.\SyncCncToFtp.ps1 -SftpHost <ftp-vm-ip> -HostKey "ssh-ed25519 256 ..."
+```
+
+### Configuration File Reference
+
+The `sync-config.ps1` file contains all settings:
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `SftpHost` | FTP server IP/hostname | (required) |
+| `HostKey` | SSH host key for verification | (auto-detected) |
+| `SourcePath` | Local folder to sync | `C:\CNC\Jobs` |
+| `RemotePath` | Remote folder on server | `/cnc-files` |
+| `SshKeyPath` | Path to publisher SSH key (PPK) | `C:\CNC\Sync\keys\publisher_ed25519.ppk` |
+| `EnableSchedule` | Enable/disable scheduled sync | `$true` |
+| `SyncIntervalMinutes` | How often to sync (minutes) | `5` |
 
 ### Windows Sync Behavior
-- `windows/SyncCncToFtp.ps1` uses WinSCP `synchronize remote -delete` to mirror changes and remove files missing on the Windows host.
-- Use with care: deletions on `C:\CNC\Jobs` will remove files from `/cnc-files`.
+- Uses WinSCP `synchronize remote -delete` to mirror changes
+- Files deleted from `C:\CNC\Jobs` will be removed from `/cnc-files`
+- Logs written to `C:\CNC\Sync\SyncCncToFtp.log`
