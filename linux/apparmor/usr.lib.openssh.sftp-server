@@ -9,7 +9,7 @@
   /etc/ssh/sshd_config.d/** r,
 
   /srv/ftp/ r,
-  /srv/ftp/cnc-files/ r,
+  /srv/ftp/cnc-files/ rw,
   /srv/ftp/cnc-files/** rw,
 
   # Allow ftpadmin to read repo for Windows client downloads

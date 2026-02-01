@@ -40,8 +40,16 @@ if (-not $HostKey -and $Config.HostKey) {
 if (-not $WinScpPath -and $Config.WinScpPath) {
     $WinScpPath = $Config.WinScpPath
 }
+# Log files - try script dir first, fall back to temp
 $logPath = Join-Path $scriptDir "SyncCncToFtp.log"
-$winScpLogPath = Join-Path $scriptDir "SyncCncToFtp.winscp.log"
+$winScpLogPath = Join-Path $env:TEMP "cnc-winscp.log"
+
+# Test if we can write to script directory
+try {
+    [IO.File]::OpenWrite($logPath).Close()
+} catch {
+    $logPath = Join-Path $env:TEMP "SyncCncToFtp.log"
+}
 $winScpExe = if ($WinScpPath) { $WinScpPath } else { Join-Path $scriptDir "WinSCP.com" }
 if (-not $HostKeyFile) {
     $HostKeyFile = Join-Path $scriptDir "hostkey.txt"
@@ -70,7 +78,8 @@ if (-not $HostKey) {
 $HostKey = $HostKey -replace '[^\x20-\x7E]', ''
 $HostKey = ($HostKey -replace '\s+', ' ').Trim().TrimEnd('.')
 
-$winScpScriptPath = Join-Path $scriptDir "winscp-script.txt"
+# Use temp folder for WinSCP script (avoids permission issues)
+$winScpScriptPath = Join-Path $env:TEMP "cnc-winscp-script.txt"
 $openCommand = 'open sftp://{0}@{1}/ -privatekey="{2}" -hostkey="{3}"' -f $SftpUser, $SftpHost, $KeyPath, $HostKey
 $syncCommand = 'synchronize remote -delete "{0}" "{1}"' -f $SourcePath, $RemotePath
 $scriptContent = @(
