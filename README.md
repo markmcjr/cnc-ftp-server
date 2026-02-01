@@ -89,15 +89,39 @@ git clone https://github.com/<org>/cnc-ftp-server.git /opt/cnc-ftp-server
 exit
 ```
 
+### Pre-Setup: Prepare SSH Keys
+
+> **Important**: The setup script configures SSH `AllowUsers` which restricts SSH access to specific users. Prepare your SSH keys BEFORE running the setup script to avoid being locked out.
+
+**On Windows (publisher workstation):**
+1. Create a folder for the sync bundle: `C:\CNC\Sync\keys`
+2. Generate a key: `ssh-keygen -t ed25519 -f C:\CNC\Sync\keys\publisher_ed25519`
+3. Copy `C:\CNC\Sync\keys\publisher_ed25519.pub` to the Debian VM (via scp, USB, or paste the contents)
+
+**On the Debian VM (as root):**
+```bash
+su -
+install -d -m 0755 /etc/ssh/authorized_keys
+# If you copied the .pub file:
+install -m 0644 /path/to/publisher_ed25519.pub /etc/ssh/authorized_keys/publisher
+# Or paste the key directly:
+echo "ssh-ed25519 AAAA... user@host" > /etc/ssh/authorized_keys/publisher
+chmod 0644 /etc/ssh/authorized_keys/publisher
+exit
+```
+
+**Optional**: If you have a `helpdesk` user or other admin accounts that need SSH access, add their keys now as well.
+
 ### Setup Steps
 1. Ensure the repo is at `/opt/cnc-ftp-server/` using one of the methods above.
-2. Review `linux/scripts/setup.env.example` and save as `linux/scripts/setup.env` if you want non-interactive setup.
-3. Run the setup script as root:
+2. **Ensure SSH keys are in place** (see Pre-Setup above) — the setup script will restrict SSH access.
+3. Review `linux/scripts/setup.env.example` and save as `linux/scripts/setup.env` if you want non-interactive setup.
+4. Run the setup script as root:
    ```bash
    su -
    bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh
    ```
-4. Apply the firewall policy described in `firewall/rules.md` on the upstream firewall.
+5. Apply the firewall policy described in `firewall/rules.md` on the upstream firewall.
 
 ### Non-Interactive Setup
 ```bash
@@ -109,16 +133,7 @@ bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh /opt/cnc-ftp-server/linux/sc
 ### Validation
 - Check `systemctl status vsftpd` and `systemctl status ssh`.
 - Confirm passive ports and user allowlist match `linux/vsftpd/vsftpd.conf` and `linux/vsftpd/vsftpd.user_list`.
-
-## SSH Setup (Windows Publisher)
-1. Create a folder for the sync bundle (example): `C:\CNC\Sync`.
-2. Generate a key on Windows: `ssh-keygen -t ed25519 -f C:\CNC\Sync\keys\publisher_ed25519`.
-3. Copy the public key (`C:\CNC\Sync\keys\publisher_ed25519.pub`) to the Debian VM.
-4. On the Debian VM, place the key at `/etc/ssh/authorized_keys/publisher` and set permissions:
-   - `sudo install -d -m 0755 /etc/ssh/authorized_keys`
-   - `sudo install -m 0644 /path/to/publisher_ed25519.pub /etc/ssh/authorized_keys/publisher`
-5. Restart SSH: `sudo systemctl restart ssh`.
-6. From Windows, test: `sftp -i C:\CNC\Sync\keys\publisher_ed25519 publisher@<ftp-vm-ip>`.
+- Test SSH from Windows: `sftp -i C:\CNC\Sync\keys\publisher_ed25519 publisher@<ftp-vm-ip>`
 
 ## Windows Sync (WinSCP)
 1. Download WinSCP portable from `https://winscp.net/download/WinSCP-6.5.5-Portable.zip/download`.
