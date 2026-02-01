@@ -9,6 +9,15 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
 
+# Production best practice: repository should be installed at /opt/cnc-ftp-server
+RECOMMENDED_PATH="/opt/cnc-ftp-server"
+if [[ "$repo_root" != "$RECOMMENDED_PATH" ]]; then
+  echo "Warning: Repository is at '$repo_root' instead of '$RECOMMENDED_PATH'." >&2
+  echo "For production systems, consider moving the repository to $RECOMMENDED_PATH" >&2
+  echo "See README.md for installation instructions." >&2
+  echo "" >&2
+fi
+
 config_file="${1:-$script_dir/setup.env}"
 if [[ -f "$config_file" ]]; then
   set -a

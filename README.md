@@ -30,27 +30,52 @@ During Debian installation, at the "Software selection" screen:
 
 > **Note**: If you skip the SSH server during install, you must transfer the repository files using alternative methods (see below).
 
+### Recommended Installation Path
+For production systems, install the repository to `/opt/cnc-ftp-server/`:
+```bash
+sudo mkdir -p /opt/cnc-ftp-server
+sudo chown $(whoami):$(whoami) /opt/cnc-ftp-server
+```
+
+This follows the [Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s13.html) for add-on application packages.
+
 ### Getting the Repository onto the VM
-Choose one of the following methods:
+Choose one of the following methods to place the repository at `/opt/cnc-ftp-server/`:
 
 **Option A: SSH server installed during Debian setup (recommended)**
-- From your workstation: `scp -r cnc-ftp-server/ user@<vm-ip>:~/`
-- Or clone directly on the VM: `git clone <repo-url>`
+```bash
+# From your workstation:
+scp -r cnc-ftp-server/ user@<vm-ip>:/opt/
+
+# Or clone directly on the VM:
+sudo git clone <repo-url> /opt/cnc-ftp-server
+sudo chown -R $(whoami):$(whoami) /opt/cnc-ftp-server
+```
 
 **Option B: No SSH server yet (manual transfer)**
-- **USB drive**: Copy the repo to a USB drive, mount it on the VM (`mount /dev/sdb1 /mnt`), and copy files
-- **Shared folder (VMware/VirtualBox)**: Configure a shared folder in your hypervisor and copy from `/mnt/hgfs/` or similar
-- **Direct clone**: If the VM has network access, install git first (`sudo apt update && sudo apt install -y git`) then clone the repo
+- **USB drive**: Copy the repo to a USB drive, mount it on the VM, and copy to `/opt/`:
+  ```bash
+  sudo mount /dev/sdb1 /mnt
+  sudo cp -r /mnt/cnc-ftp-server /opt/
+  sudo umount /mnt
+  ```
+- **Shared folder (VMware/VirtualBox)**: Configure a shared folder in your hypervisor:
+  ```bash
+  sudo cp -r /mnt/hgfs/cnc-ftp-server /opt/
+  ```
 
 **Option C: GitHub without SSH**
-- Log into the VM console directly
-- Install git: `sudo apt update && sudo apt install -y git`
-- Clone via HTTPS: `git clone https://github.com/<org>/cnc-ftp-server.git`
+```bash
+# Log into the VM console directly
+sudo apt update && sudo apt install -y git
+sudo git clone https://github.com/<org>/cnc-ftp-server.git /opt/cnc-ftp-server
+sudo chown -R $(whoami):$(whoami) /opt/cnc-ftp-server
+```
 
 ### Setup Steps
-1. Copy the repo to the Debian 12 VM using one of the methods above.
+1. Ensure the repo is at `/opt/cnc-ftp-server/` using one of the methods above.
 2. Review `linux/scripts/setup.env.example` and save as `linux/scripts/setup.env` if you want non-interactive setup.
-3. Run `sudo bash linux/scripts/setup-ftp.sh` and answer the prompts.
+3. Run `sudo bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh` and answer the prompts.
 4. Apply the firewall policy described in `firewall/rules.md` on the upstream firewall.
 
 ### Non-Interactive Setup
