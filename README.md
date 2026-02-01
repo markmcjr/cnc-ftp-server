@@ -14,6 +14,11 @@ This repository captures the design and configuration artifacts for an internal 
 - Configuration files are templates meant to be applied on the Debian FTP VM.
 - The Windows script requires `sftp.exe` in PATH and a populated `C:\CNC\ssh_known_hosts`.
 
+### Access Methods
+This server provides two separate access methods:
+- **FTP (port 21)**: Read-only access for CNC machines and clients that only support FTP (not SFTP). Uses the `cnc_ro` user with password authentication.
+- **SFTP (port 22)**: Write access for the publisher workstation to upload files. Uses the `publisher` user with SSH key authentication.
+
 ## Deployment
 
 ### VM Requirements
@@ -172,7 +177,19 @@ bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh /opt/cnc-ftp-server/linux/sc
 ### Validation
 - Check `systemctl status vsftpd` and `systemctl status ssh`.
 - Confirm passive ports and user allowlist match `linux/vsftpd/vsftpd.conf` and `linux/vsftpd/vsftpd.user_list`.
-- Test SSH from Windows: `sftp -i C:\CNC\Sync\keys\publisher_ed25519 publisher@<ftp-vm-ip>`
+
+**Test FTP access (CNC clients use FTP, not SFTP):**
+```powershell
+ftp <ftp-vm-ip>
+# Login: cnc_ro / <password>
+# Commands: ls, get <filename>, quit
+```
+
+**Test SFTP/SCP access (publisher upload):**
+```powershell
+# Quick test - copy a file to the server
+scp -i C:\CNC\Sync\keys\publisher_ed25519 C:\CNC\Jobs\test.txt publisher@<ftp-vm-ip>:/cnc-files/
+```
 
 ## Windows Sync (WinSCP)
 1. Download WinSCP portable from `https://winscp.net/download/WinSCP-6.5.5-Portable.zip/download`.
