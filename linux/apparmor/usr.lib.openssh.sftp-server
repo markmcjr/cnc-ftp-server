@@ -12,6 +12,10 @@
   /srv/ftp/cnc-files/ r,
   /srv/ftp/cnc-files/** rw,
 
+  # Allow ftpadmin to read repo for Windows client downloads
+  /opt/cnc-ftp-server/ r,
+  /opt/cnc-ftp-server/** r,
+
   /dev/null rw,
   /dev/urandom r,
   /dev/log w,
