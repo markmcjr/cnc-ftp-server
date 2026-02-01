@@ -1,8 +1,8 @@
 param(
-    [string]$SourcePath = "C:\CNC\Jobs",
-    [string]$SftpHost = "ftp-vm.local",
-    [string]$SftpUser = "publisher",
-    [string]$RemotePath = "/cnc-files",
+    [string]$SourcePath,
+    [string]$SftpHost,
+    [string]$SftpUser,
+    [string]$RemotePath,
     [Alias("SshKeyPath")]
     [string]$KeyPath,
     [string]$HostKey,
@@ -11,12 +11,38 @@ param(
 )
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+# Load config file if it exists
+$configPath = Join-Path $scriptDir "sync-config.ps1"
+if (Test-Path $configPath) {
+    . $configPath
+}
+
+# Apply config values for any parameters not provided on command line
+if (-not $SourcePath) {
+    $SourcePath = if ($Config.SourcePath) { $Config.SourcePath } else { "C:\CNC\Jobs" }
+}
+if (-not $SftpHost) {
+    $SftpHost = if ($Config.SftpHost) { $Config.SftpHost } else { "ftp-vm.local" }
+}
+if (-not $SftpUser) {
+    $SftpUser = if ($Config.SftpUser) { $Config.SftpUser } else { "publisher" }
+}
+if (-not $RemotePath) {
+    $RemotePath = if ($Config.RemotePath) { $Config.RemotePath } else { "/cnc-files" }
+}
+if (-not $KeyPath) {
+    $KeyPath = if ($Config.SshKeyPath) { $Config.SshKeyPath } else { Join-Path $scriptDir "keys\publisher_ed25519.ppk" }
+}
+if (-not $HostKey -and $Config.HostKey) {
+    $HostKey = $Config.HostKey
+}
+if (-not $WinScpPath -and $Config.WinScpPath) {
+    $WinScpPath = $Config.WinScpPath
+}
 $logPath = Join-Path $scriptDir "SyncCncToFtp.log"
 $winScpLogPath = Join-Path $scriptDir "SyncCncToFtp.winscp.log"
 $winScpExe = if ($WinScpPath) { $WinScpPath } else { Join-Path $scriptDir "WinSCP.com" }
-if (-not $KeyPath) {
-    $KeyPath = Join-Path $scriptDir "keys\publisher_ed25519.ppk"
-}
 if (-not $HostKeyFile) {
     $HostKeyFile = Join-Path $scriptDir "hostkey.txt"
 }

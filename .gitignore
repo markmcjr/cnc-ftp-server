@@ -4,6 +4,7 @@
 
 # Environment files
 linux/scripts/setup.env
+windows/sync-config.ps1
 
 # SSH keys (keep examples, exclude actual keys)
 *.pem
