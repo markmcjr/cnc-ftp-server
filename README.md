@@ -30,11 +30,18 @@ During Debian installation, at the "Software selection" screen:
 
 > **Note**: If you skip the SSH server during install, you must transfer the repository files using alternative methods (see below).
 
+> **Note**: Debian 12 minimal does not include `sudo` by default. The instructions below use `su -` to run commands as root. If you prefer sudo, install it first: `su -c "apt install -y sudo"` then add your user to the sudo group: `su -c "usermod -aG sudo <username>"` (log out and back in to apply).
+
 ### Recommended Installation Path
 For production systems, install the repository to `/opt/cnc-ftp-server/`:
 ```bash
-sudo mkdir -p /opt/cnc-ftp-server
-sudo chown $(whoami):$(whoami) /opt/cnc-ftp-server
+# Become root
+su -
+
+# Create directory and set ownership
+mkdir -p /opt/cnc-ftp-server
+chown <your-username>:<your-username> /opt/cnc-ftp-server
+exit
 ```
 
 This follows the [Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/ch03s13.html) for add-on application packages.
@@ -44,43 +51,60 @@ Choose one of the following methods to place the repository at `/opt/cnc-ftp-ser
 
 **Option A: SSH server installed during Debian setup (recommended)**
 ```bash
-# From your workstation:
-scp -r cnc-ftp-server/ user@<vm-ip>:/opt/
+# From your workstation (requires root SSH or pre-created /opt/cnc-ftp-server):
+scp -r cnc-ftp-server/ user@<vm-ip>:~/
+# Then on the VM:
+su -
+mv /home/<username>/cnc-ftp-server /opt/
+exit
 
-# Or clone directly on the VM:
-sudo git clone <repo-url> /opt/cnc-ftp-server
-sudo chown -R $(whoami):$(whoami) /opt/cnc-ftp-server
+# Or clone directly on the VM as root:
+su -
+git clone <repo-url> /opt/cnc-ftp-server
+exit
 ```
 
 **Option B: No SSH server yet (manual transfer)**
 - **USB drive**: Copy the repo to a USB drive, mount it on the VM, and copy to `/opt/`:
   ```bash
-  sudo mount /dev/sdb1 /mnt
-  sudo cp -r /mnt/cnc-ftp-server /opt/
-  sudo umount /mnt
+  su -
+  mount /dev/sdb1 /mnt
+  cp -r /mnt/cnc-ftp-server /opt/
+  umount /mnt
+  exit
   ```
 - **Shared folder (VMware/VirtualBox)**: Configure a shared folder in your hypervisor:
   ```bash
-  sudo cp -r /mnt/hgfs/cnc-ftp-server /opt/
+  su -
+  cp -r /mnt/hgfs/cnc-ftp-server /opt/
+  exit
   ```
 
 **Option C: GitHub without SSH**
 ```bash
-# Log into the VM console directly
-sudo apt update && sudo apt install -y git
-sudo git clone https://github.com/<org>/cnc-ftp-server.git /opt/cnc-ftp-server
-sudo chown -R $(whoami):$(whoami) /opt/cnc-ftp-server
+# Log into the VM console directly and become root
+su -
+apt update && apt install -y git
+git clone https://github.com/<org>/cnc-ftp-server.git /opt/cnc-ftp-server
+exit
 ```
 
 ### Setup Steps
 1. Ensure the repo is at `/opt/cnc-ftp-server/` using one of the methods above.
 2. Review `linux/scripts/setup.env.example` and save as `linux/scripts/setup.env` if you want non-interactive setup.
-3. Run `sudo bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh` and answer the prompts.
+3. Run the setup script as root:
+   ```bash
+   su -
+   bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh
+   ```
 4. Apply the firewall policy described in `firewall/rules.md` on the upstream firewall.
 
 ### Non-Interactive Setup
-- Edit `linux/scripts/setup.env` with your values, then run `sudo bash linux/scripts/setup-ftp.sh linux/scripts/setup.env`.
-- Set `INSTALL_PACKAGES=no` if you want to install packages manually.
+```bash
+su -
+bash /opt/cnc-ftp-server/linux/scripts/setup-ftp.sh /opt/cnc-ftp-server/linux/scripts/setup.env
+```
+- Set `INSTALL_PACKAGES=no` in the env file if you want to install packages manually.
 
 ### Validation
 - Check `systemctl status vsftpd` and `systemctl status ssh`.
