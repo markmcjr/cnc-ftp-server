@@ -15,6 +15,7 @@
   /srv/ftp/cnc-files/** r,
 
   /var/log/vsftpd.log rw,
+  /var/log/xferlog rw,
   /var/log/ w,
 
   /dev/null rw,
