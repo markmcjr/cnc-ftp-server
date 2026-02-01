@@ -94,15 +94,15 @@ function Find-WinScp {
 }
 
 function Get-HostKey {
-    param([string]$WinScpPath, [string]$Host)
+    param([string]$WinScpPath, [string]$ServerHost)
 
-    Write-Log "Retrieving host key from $Host..."
+    Write-Log "Retrieving host key from $ServerHost..."
 
     # Create a temporary script to get the host key
     $tempScript = [System.IO.Path]::GetTempFileName()
     try {
         @"
-open sftp://publisher@$Host/
+open sftp://publisher@$ServerHost/
 exit
 "@ | Set-Content $tempScript
 
@@ -529,7 +529,7 @@ if ([string]::IsNullOrWhiteSpace($Config.HostKey)) {
 
     $getKey = Read-Host "Attempt to retrieve host key from server? [Y/n]"
     if ($getKey -ne "n" -and $getKey -ne "N") {
-        $retrievedKey = Get-HostKey -WinScpPath $winscpPath -Host $Config.SftpHost
+        $retrievedKey = Get-HostKey -WinScpPath $winscpPath -ServerHost $Config.SftpHost
         if ($retrievedKey) {
             Write-Host "Retrieved host key: $retrievedKey" -ForegroundColor Green
             $accept = Read-Host "Accept this host key? [Y/n]"
